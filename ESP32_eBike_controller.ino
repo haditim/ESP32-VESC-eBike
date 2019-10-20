@@ -80,27 +80,18 @@ void rotary_loop() {
 		bPushed = 1;
 	}
 
-	//rotary encoder change check
+	// rotary encoder change check
 	int16_t encoderDelta = rotaryEncoder.encoderChanged();
-	
-	//optionally we can ignore whenever there is no change
+	// if no change
 	if (encoderDelta == 0) return;
-	
-	//for some cases we only want to know if value is increased or decreased (typically for menu items)
-	if (encoderDelta>0) Serial.print("+");
-	if (encoderDelta<0) Serial.print("-");
-
-	//for other cases we want to know what is current value. Additionally often we only want if something changed
-	//example: when using rotary encoder to set termostat temperature, or sound volume etc
-	
-	//if value is changed compared to our last read
+	// increased or decreased
+	// if (encoderDelta>0) Serial.print("+");
+	// if (encoderDelta<0) Serial.print("-");
 	if (encoderDelta!=0) {
 		//now we need current value
 		int16_t encoderValue = rotaryEncoder.readEncoder();
-		//process new value. Here is simple output.
 		lcdCurPage = encoderValue;
 	} 
-	
 }
 
 
