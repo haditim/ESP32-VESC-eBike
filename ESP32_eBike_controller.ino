@@ -164,7 +164,7 @@ void loop() {
     rpm = map(throttle, 0, 4095, 0, maxRPM);
     sprintf(line1, "%-12s", "SAFETY LOCK"); 
     sprintf(line2, "%-4s%-6s%-4s%-6s", "MAX", (String)safetyMax, "MIN", (String)safetyMin); 
-    sprintf(line4, "Throttle: %-7s", (String)rpm); 
+    sprintf(line4, "Throttle: %-7s", String(rpm/(float)maxRPM*100, 0)); 
     printOnLcd();
     // wait for max min on throttle
     if (safetyMax == false) {
@@ -242,6 +242,6 @@ void processPage1(){
 void processPage2(){
   sprintf(line1, "%04d.%02d.%02d  %02d:%02d:%02d", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second()); 
   sprintf(line2, "la %-6s lo %-6s", String(gps.location.lat(), 4), String(gps.location.lng(), 4)); 
-  sprintf(line3, "%-3s%-3s%-3s%-4s%-5s", "S1", "S2", "RS", "GPS", "Break"); 
-  sprintf(line4, "%-3d%-3d%-3d%-4s%-5s", sw1State, sw2State, bPushed, gps.location.isValid()? "ON":"OFF", noBreak? "OFF":"ON"); 
+  sprintf(line3, "%-3s%-3s%-3s%-4s  %-5s", "S1", "S2", "RS", "GPS", "Break"); 
+  sprintf(line4, "%-3d%-3d%-3d%-4s  %-5s", sw1State, sw2State, bPushed, gps.location.isValid()? "ON":"OFF", noBreak? "OFF":"ON"); 
 }
