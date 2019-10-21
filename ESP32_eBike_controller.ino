@@ -13,7 +13,7 @@ int throttle = 0;
 int maxRPM = 16000;
 int rpm = 0;
 int rpmInt = 250;
-int rpmSens = 50;
+int rpmSens = 90;
 int prevRPM = 0;
 bool safetyInit = false;
 bool safetyMax = false;
@@ -56,6 +56,9 @@ bool noLcd = false;
 // GPS UART
 #define RXD1 5
 #define TXD1 17
+char gpsDateTime[21];
+float longitude = 0.0000, latitude = 0.0000, gpsSpeed = 0.00;
+int gpsSats = 0, gpsAvailable = 0;
 
 // VESC UART
 VescUart UART;
@@ -70,6 +73,7 @@ float dTm = 0.0;
 float dAhC = 0.0;
 float dAh = 0.0;
 bool noBreak = false;
+float rpmTokmph = 0.00133333333333;
 
 void rotary_loop() {
 	// rotary encoder button click
@@ -191,6 +195,18 @@ void loop() {
     dAhC = UART.data.ampHoursCharged;
   }
 
+  // Receive GPS values
+  while (Serial1.available() > 0){
+    if (gps.encode(Serial1.read())){
+      sprintf(gpsDateTime, "%04d.%02d.%02d  %02d:%02d:%02d", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second());
+      longitude = gps.location.lng();
+      latitude = gps.location.lat(); 
+      gpsSpeed = gps.speed.kmph();
+      gpsSats = gps.satellites.value();
+      gpsAvailable = gps.location.isValid()?1:0;
+    }
+  }
+
   
   if (noBreak == true){
     UART.setBrakeCurrent(0);
@@ -236,12 +252,12 @@ void processPage1(){
   sprintf(line1, "%-5s%-5s%-4s%-3s%-3s", "Volt", "Curr",  "Pow", "Tv", "Tm"); 
   sprintf(line2, "%-5s%-5s%-4s%-3s%-3s", String(dV, 1), String(dC, 1), String(dP, 0), String(dTv, 0), String(dTm, 0)); 
   sprintf(line3, "%-4s%-4s%-5s%-4s%-3s", "RPM", "set", "Sp.", "Ah", "-Ah"); 
-  sprintf(line4, "%-4s%-4s%-5s%-4s%-3s", String(dRPM/100., 0), String(prevRPM/100., 0), String(speed/100., 1), String(dAh/100., 0), String(dAhC/100., 0)); 
+  sprintf(line4, "%-4s%-4s%-5s%-4s%-3s", String(dRPM/100., 0), String(prevRPM/100., 0), String(gpsSpeed, 1), String(dAh, 1), String(dAhC, 1)); 
 }
 
 void processPage2(){
-  sprintf(line1, "%04d.%02d.%02d  %02d:%02d:%02d", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second()); 
-  sprintf(line2, "la %-6s lo %-6s", String(gps.location.lat(), 4), String(gps.location.lng(), 4)); 
-  sprintf(line3, "%-3s%-3s%-3s%-4s  %-5s", "S1", "S2", "RS", "GPS", "Break"); 
-  sprintf(line4, "%-3d%-3d%-3d%-4s  %-5s", sw1State, sw2State, bPushed, gps.location.isValid()? "ON":"OFF", noBreak? "OFF":"ON"); 
+  sprintf(line1, "%-20s", gpsDateTime); 
+  sprintf(line2, "%-3s %-7s %-7s", gpsAvailable? "GPS":"N/A", String(latitude, 4), String(longitude, 4)); 
+  sprintf(line3, "%-5s%-5s%-3s %-5s", "vSp.", "gSp.", "Sat.", "Break"); 
+  sprintf(line4, "%-5s%-5s %02d  %-5s", String((float)dRPM*rpmTokmph, 1), String(gpsSpeed, 1), gpsSats, noBreak? "OFF":"ON"); 
 }
