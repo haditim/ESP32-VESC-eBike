@@ -7,19 +7,9 @@
 //Inits
 #define sw1 32
 #define sw2 2
-int sw1State, sw2State;
-int potPin = 34;
-int throttle = 0;
-int maxRPM = 16000;
-int rpm = 0;
-int rpmInt = 250;
-int rpmSens = 90;
-int prevRPM = 0;
-bool safetyInit = false;
-bool safetyMax = false;
-bool safetyMin = false;
-int lcdCurPage = 1;
-static const uint8_t lcdPages[] = {1, 2};
+int sw1State, sw2State, potPin = 34, throttle = 0, maxRPM = 16000, rpm = 0;
+int rpmInt = 250, rpmSens = 90, prevRPM = 0;
+bool safetyInit = false, safetyMax = false, safetyMin = false;
 
 // Rotary Encoder
 #define ROTARY_ENCODER_A_PIN 18
@@ -27,8 +17,7 @@ static const uint8_t lcdPages[] = {1, 2};
 #define ROTARY_ENCODER_BUTTON_PIN 23
 #define ROTARY_ENCODER_VCC_PIN -1
 AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN);
-int test_limits = 2;
-int bPushed = 0;
+int test_limits = 2, bPushed = 0;
 
 // The TinyGPS++ object
 TinyGPSPlus gps;
@@ -36,22 +25,16 @@ bool gpsOn = false;
 float speed = 0.0;
 
 // LCD SDA 21 SCL 22
+int lcdCurPage = 1;
+static const uint8_t lcdPages[] = {1, 2};
 LiquidCrystal_I2C lcd(0x27, 20, 4);
-char line1[21];
-char line2[21];
-char line3[21];
-char line4[21];
+char line1[21], line2[21], line3[21], line4[21];
 
-// Thermistor variables
-int ThermistorPin = 14;
-int Vo;
-float R1 = 10000;
-float logR2, R2, T, Tc, Tf;
-float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
-int therCount = 0;
-int therAvgCount = 10;
-float therAvg = 0.0;
-bool noLcd = false;
+// Thermistor variables (installed on motor)
+int ThermistorPin = 14, Vo, therCount = 0, therAvgCount = 10;
+float R1 = 10000, logR2, R2, T, Tc, Tf, c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
+float therAvg = 0.0;  // Average for motor temp
+bool noLcd = false;  // For when the LCD is supposed to be off
 
 // GPS UART
 #define RXD1 5
@@ -65,15 +48,8 @@ VescUart UART;
 #define RXD2 25
 #define TXD2 27
 int dRPM = 0;
-float dV = 0.00;
-float dC = 0.000;
-float dP = 0.0;
-float dTv = 0.0;
-float dTm = 0.0;
-float dAhC = 0.0;
-float dAh = 0.0;
+float dV = 0.00, dC = 0.000, dP = 0.0, dTv = 0.0, dTm = 0.0, dAhC = 0.0, dAh = 0.0, rpmTokmph = 0.00133333333333;
 bool noBreak = false;
-float rpmTokmph = 0.00133333333333;
 
 void rotary_loop() {
 	// rotary encoder button click
