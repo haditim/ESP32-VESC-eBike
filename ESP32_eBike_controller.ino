@@ -22,7 +22,8 @@ int test_limits = 2, bPushed = 0;
 // The TinyGPS++ object
 TinyGPSPlus gps;
 bool gpsOn = false;
-float speed = 0.0;
+float speed = 0.0, speedAvg = 0.0;
+int speedAvgCount = 5, speedCount = 0;
 
 // LCD SDA 21 SCL 22
 int lcdCurPage = 1;
@@ -177,9 +178,17 @@ void loop() {
       sprintf(gpsDateTime, "%04d.%02d.%02d  %02d:%02d:%02d", gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour(), gps.time.minute(), gps.time.second());
       longitude = gps.location.lng();
       latitude = gps.location.lat(); 
-      gpsSpeed = gps.speed.kmph();
       gpsSats = gps.satellites.value();
       gpsAvailable = gps.location.isValid()?1:0;
+
+      // Speed averaging
+      speedAvg += gps.speed.kmph();
+      speedCount += 1;
+      if (speedCount == speedAvgCount){
+        gpsSpeed = speedAvg/speedAvgCount;
+        speedAvg = 0.0;
+        speedCount = 0;
+      }
     }
   }
 
