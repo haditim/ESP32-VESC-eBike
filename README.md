@@ -1,10 +1,14 @@
+
 This is the second version of my DIY mountain eBike, this time using an ESP32 microcontroller. All the information about the version 1 can be found [on my website](https://hadi.timachi.com/project/5/DIY_mountain_e_bike).
+
+
 
 # Required libraries
 1. [My fork of VescUART](https://github.com/haditim/VescUart)
-2. [ESP32 rotary encoder ai-esp32-rotary-encoder](https://github.com/igorantolic/ai-esp32-rotary-encoder)
 3. [TinyGPSPlus](https://github.com/mikalhart/TinyGPSPlus)
 4. [LiquidCrystal_I2C](https://github.com/johnrickman/LiquidCrystal_I2C)
+5. [Smoothed](https://github.com/MattFryer/Smoothed)
+6. [PushButton](https://github.com/kristianklein/PushButton)
 
 # Hardware bill of material
 Everything about the parts and pieces I used can be found on my website.
