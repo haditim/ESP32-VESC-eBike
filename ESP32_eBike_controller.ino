@@ -215,6 +215,8 @@ void setRpm(){
   }
   else if (touchValue.get() < 10){
     rpmRead.add(0);
+    rpmRead.add(0);
+    rpmRead.add(0); // three values to stop faster
     UART.setRPM(rpmRead.get());
   }
   else {
