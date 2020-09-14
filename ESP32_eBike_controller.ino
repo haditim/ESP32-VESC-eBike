@@ -8,7 +8,7 @@
 #define swAllOff 14
 #define swCruise 26
 int sw1State, brakeState, allOffState, cruiseState;
-int potPin = 34, maxRPM = 16000, rpm = 0;
+int potPin = 34, maxRPM = 18000, rpm = 0;
 float throttle = 0.0;
 Smoothed <int> rpmRead;
 // int rpmInt = 150, rpmSens = 50, prevRPM = 0;
@@ -155,33 +155,26 @@ void setRpm(){
   }
 
   if (cruise != lastCruiseState) {
-    Serial.println("Cruise state changed");
     if (cruise == true){
       rpm = throttle * maxRPM;
     }
   }
 
   if (allOff == true){
-    Serial.print("All off ");
-    Serial.println();
     UART.setBrakeCurrent(0);
   }
   else if (cruise == true){
-    Serial.print("Cruise ");
-    Serial.print(rpm);
-    Serial.println();
     UART.setRPM(rpm);
   }
   else if (noBrake == true){
-    Serial.print("noBrake ");
-    Serial.print(throttle);
-    Serial.println();
-    UART.setDuty(throttle);
+    if (UART.data.rpm - 0.1*maxRPM > throttle*maxRPM || throttle < 0.15) {
+      UART.setBrakeCurrent(0);
+    }
+    else {
+      UART.setRPM(throttle*maxRPM);
+    }
   }
   else {
-    Serial.print("Brake ");
-    Serial.print(throttle*maxRPM);
-    Serial.println();
     UART.setRPM(throttle*maxRPM);
   }
   lastCruiseState = cruise;
