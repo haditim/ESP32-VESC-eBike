@@ -1,9 +1,25 @@
+#include <SPI.h>
 #include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 #include <VescUart.h>
 #include <PushButton.h>
 #include <Smoothed.h>
 
 //Inits
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+// Declaration for SSD1306 display connected using software SPI (default case):
+#define OLED_MOSI  23
+#define OLED_CLK   18
+#define OLED_DC    21
+#define OLED_CS    5
+#define OLED_RESET 4
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT,
+  OLED_MOSI, OLED_CLK, OLED_DC, OLED_RESET, OLED_CS);
+
 #define swBrake 27
 #define swAllOff 14
 #define swCruise 26
@@ -12,13 +28,6 @@ int potPin = 34, maxRPM = 18000, rpm = 0;
 float throttle = 0.0;
 Smoothed <int> rpmRead;
 // int rpmInt = 150, rpmSens = 50, prevRPM = 0;
-
-// Safety init
-bool safetyInit = false, safetyMax = false, safetyMin = false;
-
-// Touchpad
-#define TOUCH 33
-Smoothed <int> touchValue;
 
 
 // Thermistor variables (installed on motor)
@@ -46,16 +55,13 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, RXD2, TXD2);  // UART VESC
   UART.setSerialPort(&Serial2);
 
-  pinMode(TOUCH, INPUT);
   pinMode(ThermistorPin, INPUT);
 
   // switches
   pinMode(swBrake, INPUT_PULLDOWN);
   pinMode(swAllOff, INPUT_PULLDOWN);
   pinMode(swCruise, INPUT_PULLDOWN);
-
   // Smoothed values
-  touchValue.begin(SMOOTHED_AVERAGE, 4);
   motorTemp.begin(SMOOTHED_AVERAGE, 20);
   rpmRead.begin(SMOOTHED_AVERAGE, 8);
   dRPM.begin(SMOOTHED_AVERAGE, 15);
@@ -63,11 +69,16 @@ void setup() {
   dP.begin(SMOOTHED_AVERAGE, 15);
   dV.begin(SMOOTHED_AVERAGE, 15);
   dRPM.add(0);  // avoid a division error
+  // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
 }
 
 void loop() {
   // Thermistor
-  tempCalculator();
+  /* tempCalculator(); */
 
   // throttle
   throttle = getThrottlePercent();
@@ -80,7 +91,33 @@ void loop() {
 
   // Set RPM values
   setRpm();
+
+  renderDisplay();
+
   delay(100);
+}
+
+void renderDisplay(){
+  display.clearDisplay();
+  display.setTextSize(3);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println((float)dRPM.get()*rpmTokmph, 1);
+  display.setCursor(78, 0);
+  display.setTextSize(1);
+  display.println(F("set km/h"));
+  display.setCursor(78, 8);
+  display.setTextSize(2);
+  display.println(F("22.6"));
+  display.setTextSize(2);
+  display.println(dV.get());
+  display.setTextSize(1);
+  display.setCursor(0, 44);
+  display.println(F("+2300 -100 mAh"));
+  display.setTextSize(1);
+  display.setCursor(0, 54);
+  display.println(F("Brake 56.5C cruise"));
+  display.display();      // Show initial text
 }
 
 void tempCalculator(){
@@ -118,6 +155,7 @@ void switchesFunc(){
 void vescRead(){
   // Receive VESC values
   if ( UART.getVescValues()) {
+    Serial.println(UART.data.inputVoltage);
     dRPM.add(UART.data.rpm);
     dV.add(UART.data.inputVoltage);
     dC.add(UART.data.avgMotorCurrent);
@@ -144,38 +182,39 @@ float getThrottlePercent(){
 
 
 void setRpm(){
-  if (allOff == true) {
-    /* Serial.println("All off"); */
-  }
-  else if (cruise == true) {
-    /* Serial.println("Cruise On"); */
-  }
-  else {
-    /* Serial.println("Center"); */
-  }
+/*   if (allOff == true) { */
+/*     /\* Serial.println("All off"); *\/ */
+/*   } */
+/*   else if (cruise == true) { */
+/*     /\* Serial.println("Cruise On"); *\/ */
+/*   } */
+/*   else { */
+/*     /\* Serial.println("Center"); *\/ */
+/*   } */
 
-  if (cruise != lastCruiseState) {
-    if (cruise == true){
-      rpm = throttle * maxRPM;
-    }
-  }
+/*   if (cruise != lastCruiseState) { */
+/*     if (cruise == true){ */
+/*       rpm = throttle * maxRPM; */
+/*     } */
+/*   } */
 
-  if (allOff == true){
-    UART.setBrakeCurrent(0);
-  }
-  else if (cruise == true){
-    UART.setRPM(rpm);
-  }
-  else if (noBrake == true){
-    if (UART.data.rpm - 0.1*maxRPM > throttle*maxRPM || throttle < 0.15) {
-      UART.setBrakeCurrent(0);
-    }
-    else {
-      UART.setRPM(throttle*maxRPM);
-    }
-  }
-  else {
-    UART.setRPM(throttle*maxRPM);
-  }
-  lastCruiseState = cruise;
+/*   if (allOff == true){ */
+/*     UART.setBrakeCurrent(0); */
+/*   } */
+/*   else if (cruise == true){ */
+/*     UART.setRPM(rpm); */
+/*   } */
+/*   else if (noBrake == true){ */
+/*     if (UART.data.rpm - 0.1*maxRPM > throttle*maxRPM || throttle < 0.15) { */
+/*       UART.setBrakeCurrent(0); */
+/*     } */
+/*     else { */
+/*       UART.setRPM(throttle*maxRPM); */
+/*     } */
+/*   } */
+/*   else { */
+/*     UART.setRPM(throttle*maxRPM); */
+/*   } */
+/*   lastCruiseState = cruise; */
+UART.setRPM(2000);
 }
